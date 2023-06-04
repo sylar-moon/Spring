@@ -1,5 +1,8 @@
 package my.group.validator;
 
+import my.group.utilities.MyLogger;
+import org.slf4j.Logger;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.time.LocalDate;
@@ -8,39 +11,44 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public class CheckIpnValidator implements ConstraintValidator<CheckIpn, String> {
+    private final Logger logger = new MyLogger().getLogger();
 
     @Override
     public boolean isValid(String ipn, ConstraintValidatorContext constraintValidatorContext) {
-    if(ipn == null||ipn.length() != 10|| isNumber(ipn)) {
-        return false;
+        if (ipn == null || ipn.length() != 10 || !isNumber(ipn)) {
+            return false;
+        }
+        return checkFirstFiveNumb(ipn) && checkLastNumb(ipn);
     }
 
-
-        int firstFiveNumb = Integer.parseInt(ipn.substring(0,5));
+     boolean checkFirstFiveNumb(String ipn) {
+        int firstFiveNumb = Integer.parseInt(ipn.substring(0, 5));
         LocalDate nowDate = LocalDate.now();
-        LocalDate startDate = LocalDate.of(1899,12,31);
-        LocalDate ageOldestPerson = nowDate.minusYears(117);
-        long dayOldestPerson = ChronoUnit.DAYS.between(startDate,ageOldestPerson);
-        long dayYoungestPerson = ChronoUnit.DAYS.between(startDate,nowDate);
-        if (firstFiveNumb<dayOldestPerson||firstFiveNumb>dayYoungestPerson||checkLastNumb(ipn)){
+        LocalDate startDate = LocalDate.of(1899, 12, 31);
+        LocalDate ageOldestPerson = nowDate.minusYears(118);
+
+        long dayOldestPerson = ChronoUnit.DAYS.between(startDate, ageOldestPerson);
+        long dayYoungestPerson = ChronoUnit.DAYS.between(startDate, nowDate);
+
+        if (firstFiveNumb < dayOldestPerson) {
+            logger.error("Such an IPN cannot exist because there are no such old people in Ukraine");
+            logger.info("The minimum number of days from 12/31/1899 can be {}," +
+                    " which is the IPN number of a 118 year old person", dayOldestPerson);
+            return false;
+        } else if (firstFiveNumb > dayYoungestPerson) {
+            logger.error("Such an IPN number cannot exist because the first five numbers exceed the number of days from 12/31/1899");
+            logger.info("The number of days from 31/12/1899 is {}", dayYoungestPerson);
             return false;
         }
 
-
-//        int lastNumb = ipn.
-
-
-
-
-
         return true;
-
 
     }
 
-    public boolean checkLastNumb(String ipn) {
-        int lastNumb =Integer.parseInt(ipn.substring(9)) ;
-        int[]str = Arrays.stream(ipn.split(""))
+
+     boolean checkLastNumb(String ipn) {
+        int lastNumb = Integer.parseInt(ipn.substring(9));
+        int[] str = Arrays.stream(ipn.split(""))
                 .mapToInt(Integer::parseInt)
                 .toArray();
 
@@ -56,15 +64,17 @@ public class CheckIpnValidator implements ConstraintValidator<CheckIpn, String> 
 
         final int total = first + second + third + forth + fifth + sixth + seventh + eighth + ninth;
         final int controlDigit = (total % 11) % 10;
-
-        System.out.println(controlDigit);
-
-        return lastNumb==controlDigit;
-
+        if(lastNumb == controlDigit){
+            return true;
+        }else {
+            logger.error("The control tenth number is calculated incorrectly");
+            logger.info("Correct check number is {}",controlDigit);
+            return false;
+        }
     }
 
 
-    public boolean isNumber(String ipn) {
-        return Pattern.matches("^[0-9]+$",ipn);
+     boolean isNumber(String ipn) {
+        return Pattern.matches("^[0-9]+$", ipn);
     }
 }

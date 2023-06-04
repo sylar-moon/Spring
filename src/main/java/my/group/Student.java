@@ -3,6 +3,8 @@ package my.group;
 import my.group.validator.CheckIpn;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "student")
@@ -11,19 +13,24 @@ public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private int id;
+    private Long id;
 
     @Column(name = "first_name")
+    @NotBlank(message = "Your firstName cannot be empty")
     private String firstName;
 
+    @NotBlank(message = "Your lastName cannot be empty")
     @Column(name = "last_name")
     private String lastName;
 
     @Column(name = "email")
+    @NotBlank(message = "Your email cannot be empty")
+    @Email(message = "Your email is not correct")
     private String email;
 
+    @Column(name = "ipn", unique = true)
     @CheckIpn(message = "your number ipn is not correct")
-    @Column(name = "ipn")
+    @NotBlank(message = "Your ipn cannot be empty")
     private String ipn;
 
     public Student() {
@@ -34,23 +41,23 @@ public class Student {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.ipn =ipn;
+        this.ipn = ipn;
     }
 
     public String getIpn() {
         return ipn;
     }
 
-    public Student setIpn(String RNOKPP) {
-        this.ipn = RNOKPP;
+    public Student setIpn(String ipn) {
+        this.ipn = ipn;
         return this;
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -85,7 +92,7 @@ public class Student {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", rnokpp='" + ipn + '\'' +
+                ", ipn='" + ipn + '\'' +
                 '}';
     }
 }
